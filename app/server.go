@@ -36,6 +36,7 @@ func handleClient(conn net.Conn) {
 	n, err := conn.Read(buffer)
 
 	message := string(buffer[:n])
+	fmt.Println(message)
 	lines := strings.Split(message, "\n")
 
 	for _, line := range lines {
