@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"net"
 	"os"
@@ -25,7 +24,7 @@ func main() {
 			continue
 		}
 
-		go handleClient(conn)
+		handleClient(conn)
 	}
 }
 
@@ -34,31 +33,23 @@ func handleClient(conn net.Conn) {
 
 	var response string
 
-	buffer := make([]byte, 1024)
+	reader := bufio.NewReader(conn)
 
 	for {
-		n, err := conn.Read(buffer)
+		line, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Error reading:", err)
-			return
+			break // End of input
 		}
 
-		data := buffer[:n]
-
-		reader := bytes.NewReader(data)
-		scanner := bufio.NewScanner(reader)
-		scanner.Split(bufio.ScanLines)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.Contains(strings.ToLower(line), "ping") {
-				response += "+PONG\r\n"
-			}
-		}
-
-		buf := []byte(response)
-		_, err = conn.Write(buf)
-		if err != nil {
-			return
+		if strings.Contains(line, "ping") {
+			response += "PONG\n"
 		}
 	}
+
+	buf := []byte(response)
+	_, err := conn.Write(buf)
+	if err != nil {
+		return
+	}
+
 }
