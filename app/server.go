@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -30,29 +29,6 @@ func main() {
 func handleClient(conn net.Conn) {
 	defer conn.Close()
 
-	for {
-		var response string
-		buffer := make([]byte, 1024)
-		n, err := conn.Read(buffer)
-		if err != nil {
-			fmt.Println("Error reading from connection: ", err.Error())
-			os.Exit(1)
-		}
+	conn.Write([]byte("+PONG\r\n"))
 
-		message := string(buffer[:n])
-		fmt.Println(message)
-		lines := strings.Split(message, "\n")
-
-		for _, line := range lines {
-			if strings.Contains(line, "ping") {
-				response += "+PONG\r\n"
-			}
-		}
-
-		buf := []byte(response)
-		_, err = conn.Write(buf)
-		if err != nil {
-			return
-		}
-	}
 }
