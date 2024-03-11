@@ -42,7 +42,7 @@ func handleClient(conn net.Conn) {
 		}
 
 		if strings.Contains(line, "ping") {
-			response += "PONG\n"
+			response += "+PONG\r\n"
 		}
 	}
 
@@ -51,5 +51,4 @@ func handleClient(conn net.Conn) {
 	if err != nil {
 		return
 	}
-
 }
