@@ -27,6 +27,9 @@ func main() {
 func handleClient(conn net.Conn) {
 	defer conn.Close()
 
-	buf := []byte("+PONG\n\r")
-	conn.Write(buf)
+	buf := []byte("+PONG\r\n")
+	_, err := conn.Write(buf)
+	if err != nil {
+		return
+	}
 }
