@@ -34,11 +34,10 @@ func handleClient(conn net.Conn) {
 
 	var response string
 
-	reader := bufio.NewReader(conn)
 	buffer := make([]byte, 1024)
 
 	for {
-		n, err := reader.Read(buffer)
+		n, err := conn.Read(buffer)
 		if err != nil {
 			fmt.Println("Error reading:", err)
 			return
