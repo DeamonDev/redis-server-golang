@@ -35,6 +35,10 @@ func handleClient(conn net.Conn) {
 	for {
 		buffer := make([]byte, 1024)
 		n, err := conn.Read(buffer)
+		if err != nil {
+			fmt.Println("Error reading from connection: ", err.Error())
+			os.Exit(1)
+		}
 
 		message := string(buffer[:n])
 		fmt.Println(message)
