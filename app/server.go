@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"net"
 	"os"
@@ -33,21 +32,20 @@ func handleClient(conn net.Conn) {
 
 	var response string
 
-	reader := bufio.NewReader(conn)
+	buffer := make([]byte, 1024)
+	n, err := conn.Read(buffer)
 
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			break // End of input
-		}
+	message := string(buffer[:n])
+	lines := strings.Split(message, "\n")
 
+	for _, line := range lines {
 		if strings.Contains(line, "ping") {
 			response += "+PONG\r\n"
 		}
 	}
 
 	buf := []byte(response)
-	_, err := conn.Write(buf)
+	_, err = conn.Write(buf)
 	if err != nil {
 		return
 	}
