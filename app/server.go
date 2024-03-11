@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -29,7 +31,21 @@ func main() {
 func handleClient(conn net.Conn) {
 	defer conn.Close()
 
-	buf := []byte("+PONG\r\n")
+	var response string
+
+	scanner := bufio.NewScanner(conn)
+	for scanner.Scan() {
+		text := scanner.Text()
+		lines := strings.Split(text, "\n")
+
+		for _, line := range lines {
+			if strings.Contains(strings.ToLower(line), "ping") {
+				response += "+PONG\r\n"
+			}
+		}
+	}
+
+	buf := []byte(response)
 	_, err := conn.Write(buf)
 	if err != nil {
 		return
