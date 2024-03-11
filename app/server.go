@@ -30,9 +30,8 @@ func main() {
 func handleClient(conn net.Conn) {
 	defer conn.Close()
 
-	var response string
-
 	for {
+		var response string
 		buffer := make([]byte, 1024)
 		n, err := conn.Read(buffer)
 		if err != nil {
