@@ -16,11 +16,13 @@ func main() {
 	fmt.Println("Server is listening on port 6379")
 
 	for {
-		_, err = l.Accept()
+		conn, err := l.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection: ", err.Error())
 			continue
 		}
+
+		handleClient(conn)
 	}
 }
 
