@@ -13,7 +13,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Server is listening on port 6379")
+	fmt.Println("Server is listening on port 6379 XD")
 
 	for {
 		conn, err := l.Accept()
