@@ -39,7 +39,7 @@ func main() {
 			continue
 		}
 
-		handleClient(conn, redisServer)
+		go handleClient(conn, redisServer)
 	}
 }
 
