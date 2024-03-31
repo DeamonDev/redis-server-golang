@@ -115,7 +115,7 @@ func handleClient(conn net.Conn, server *RedisServer) {
 			value := server.db[key]
 			length := len(value.Value)
 
-			str := fmt.Sprintf("$%d\r\n%s\r\n", length, value)
+			str := fmt.Sprintf("$%d\r\n%s\r\n", length, value.Value)
 			server.mu.Unlock()
 
 			conn.Write([]byte(str))
