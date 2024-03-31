@@ -28,7 +28,7 @@ func ExpiryAnalyzer(db map[string]DbRow, mu *sync.RWMutex) {
 			}
 		}
 
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 }
 
@@ -97,7 +97,6 @@ func handleClient(conn net.Conn, server *RedisServer) {
 			str := fmt.Sprintf("+%s\r\n", commandValue.Value)
 			conn.Write([]byte(str))
 		case command.SetCommand:
-			str := "+OK\r\n"
 			server.mu.Lock()
 
 			key := commandValue.Key
@@ -107,15 +106,21 @@ func handleClient(conn net.Conn, server *RedisServer) {
 			server.db[key] = DbRow{Value: value, Expiry: expiry}
 			server.mu.Unlock()
 
+			str := "+OK\r\n"
 			conn.Write([]byte(str))
 		case command.GetCommand:
+			var str string
 			server.mu.Lock()
 
 			key := commandValue.Key
-			value := server.db[key]
+			value, exists := server.db[key]
 			length := len(value.Value)
 
-			str := fmt.Sprintf("$%d\r\n%s\r\n", length, value.Value)
+			if exists {
+				str = fmt.Sprintf("$%d\r\n%s\r\n", length, value.Value)
+			} else {
+				str = "$-1\r\n"
+			}
 			server.mu.Unlock()
 
 			conn.Write([]byte(str))
