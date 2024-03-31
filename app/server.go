@@ -9,12 +9,11 @@ import (
 	"time"
 
 	command "github.com/codecrafters-io/redis-starter-go/app/command"
-	"github.com/codecrafters-io/redis-starter-go/app/parser"
+	"github.com/codecrafters-io/redis-starter-go/app/resp"
 )
 
-
 type RedisServer struct {
-	respParser    *parser.RespParser
+	respParser    *resp.RespParser
 	commandParser *command.RedisCommandParser
 	db            map[string]DbRow
 	mu            *sync.RWMutex
@@ -27,7 +26,7 @@ type DbRow struct {
 
 func NewRedisServer() *RedisServer {
 	return &RedisServer{
-		respParser:    parser.NewParser(),
+		respParser:    resp.NewParser(),
 		commandParser: command.NewRedisCommandParser(),
 		db:            make(map[string]DbRow),
 		mu:            &sync.RWMutex{},
@@ -48,7 +47,7 @@ func main() {
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			fmt.Println("Error accepting connection: ", err.Error())
+			fmt.Println("Error while accepting connection: ", err.Error())
 			continue
 		}
 
@@ -101,7 +100,6 @@ func handleClient(conn net.Conn, server *RedisServer) {
 					str = "$-1\r\n"
 				} else {
 					str = fmt.Sprintf("$%d\r\n%s\r\n", length, value.Value)
-
 				}
 			} else {
 				str = "$-1\r\n"

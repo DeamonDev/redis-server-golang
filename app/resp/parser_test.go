@@ -1,4 +1,4 @@
-package parser
+package resp
 
 import (
 	"bytes"
@@ -60,7 +60,7 @@ func TestParseBulkString(t *testing.T) {
 
 	expectedBulkString := "HELLO"
 	expectedRespValue := BulkStringRespValue{
-		BulkStr: expectedBulkString,
+		Str: expectedBulkString,
 	}
 
 	parsedValue, _ := rp.Parse(reader)
@@ -85,7 +85,7 @@ func TestParseArray(t *testing.T) {
 				Num: 20,
 			},
 			BulkStringRespValue{
-				BulkStr: "HELLO",
+				Str: "HELLO",
 			},
 		},
 	}

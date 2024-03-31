@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codecrafters-io/redis-starter-go/app/parser"
+	"github.com/codecrafters-io/redis-starter-go/app/resp"
 )
 
 type RedisCommand interface{}
@@ -32,14 +32,14 @@ func NewRedisCommandParser() *RedisCommandParser {
 	return &RedisCommandParser{}
 }
 
-func (rcp *RedisCommandParser) Parse(respValue parser.RespValue) (RedisCommand, error) {
+func (rcp *RedisCommandParser) Parse(respValue resp.RespValue) (RedisCommand, error) {
 
 	switch s := respValue.(type) {
-	case parser.ArrayRespValue:
+	case resp.ArrayRespValue:
 
-		var args []parser.BulkStringRespValue
+		var args []resp.BulkStringRespValue
 		for _, item := range s.Arr {
-			if b, ok := item.(parser.BulkStringRespValue); ok {
+			if b, ok := item.(resp.BulkStringRespValue); ok {
 				args = append(args, b)
 			}
 		}
@@ -55,6 +55,7 @@ func (rcp *RedisCommandParser) Parse(respValue parser.RespValue) (RedisCommand, 
 				case "px":
 					num, _ := strconv.Atoi(args[4].Str)
 					expiry := time.Now().Add(time.Duration(num) * time.Millisecond)
+
 					return SetCommand{Key: args[1].Str, Value: args[2].Str, Expiry: &expiry}, nil
 				default:
 					return nil, nil
