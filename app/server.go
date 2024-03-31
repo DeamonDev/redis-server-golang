@@ -84,10 +84,8 @@ func handleClient(conn net.Conn, server *RedisServer) {
 
 			key := commandValue.Key
 			value := server.m[key]
-			length := len(value)
 
-			str := fmt.Sprintf("$%d\r\n%s\r\n", length, value)
-			conn.Write([]byte(str))
+			conn.Write([]byte(value))
 		case command.PingCommand:
 			conn.Write([]byte("+PONG\r\n"))
 		}
