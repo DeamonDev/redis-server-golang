@@ -6,23 +6,47 @@ import (
 	"net"
 	"os"
 	"sync"
+	"time"
 
 	command "github.com/codecrafters-io/redis-starter-go/app/command"
 	"github.com/codecrafters-io/redis-starter-go/app/parser"
 )
 
+func ExpiryAnalyzer(db map[string]DbRow, mu *sync.RWMutex) {
+	for {
+		fmt.Println("<<EXPIRY_ANALYZER>>")
+
+		for k, v := range db {
+			if v.Expiry == nil {
+				continue
+			}
+
+			if time.Now().After(*v.Expiry) {
+				delete(db, k)
+			}
+		}
+
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
 type RedisServer struct {
 	respParser    *parser.RespParser
 	commandParser *command.RedisCommandParser
-	m             map[string]string
-	mu            sync.RWMutex
+	db            map[string]DbRow
+	mu            *sync.RWMutex
+}
+
+type DbRow struct {
+	Value  string
+	Expiry *time.Time
 }
 
 func NewRedisServer() *RedisServer {
 	return &RedisServer{
 		respParser:    parser.NewParser(),
 		commandParser: command.NewRedisCommandParser(),
-		m:             make(map[string]string),
+		db:            make(map[string]DbRow),
 	}
 }
 
@@ -36,6 +60,8 @@ func main() {
 	}
 
 	fmt.Println("Server is listening on port 6379")
+
+	go ExpiryAnalyzer(redisServer.db, redisServer.mu)
 
 	for {
 		conn, err := l.Accept()
@@ -73,8 +99,9 @@ func handleClient(conn net.Conn, server *RedisServer) {
 
 			key := commandValue.Key
 			value := commandValue.Value
+			expiry := commandValue.Expiry
 
-			server.m[key] = value
+			server.db[key] = DbRow{Value: value, Expiry: expiry}
 			server.mu.Unlock()
 
 			conn.Write([]byte(str))
@@ -82,11 +109,12 @@ func handleClient(conn net.Conn, server *RedisServer) {
 			server.mu.Lock()
 
 			key := commandValue.Key
-			value := server.m[key]
-			length := len(value)
+			value := server.db[key]
+			length := len(value.Value)
 
 			str := fmt.Sprintf("$%d\r\n%s\r\n", length, value)
 			server.mu.Unlock()
+
 			conn.Write([]byte(str))
 		case command.PingCommand:
 			conn.Write([]byte("+PONG\r\n"))

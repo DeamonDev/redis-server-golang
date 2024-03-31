@@ -1,8 +1,11 @@
 package command
 
 import (
-	"github.com/codecrafters-io/redis-starter-go/app/parser"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/codecrafters-io/redis-starter-go/app/parser"
 )
 
 type RedisCommand interface{}
@@ -14,8 +17,9 @@ type EchoCommand struct {
 type PingCommand struct{}
 
 type SetCommand struct {
-	Key   string
-	Value string
+	Key    string
+	Value  string
+	Expiry *time.Time
 }
 
 type GetCommand struct {
@@ -40,15 +44,26 @@ func (rcp *RedisCommandParser) Parse(respValue parser.RespValue) (RedisCommand, 
 			}
 		}
 
-		switch strings.ToLower(args[0].BulkStr) {
+		switch strings.ToLower(args[0].Str) {
 		case "echo":
-			return EchoCommand{Value: args[1].BulkStr}, nil
+			return EchoCommand{Value: args[1].Str}, nil
 		case "ping":
 			return PingCommand{}, nil
 		case "set":
-			return SetCommand{Key: args[1].BulkStr, Value: args[2].BulkStr}, nil
+			if len(args) > 3 {
+				switch strings.ToLower(args[3].Str) {
+				case "px":
+					num, _ := strconv.Atoi(args[4].Str)
+					expiry := time.Now().Add(time.Duration(num) * time.Millisecond)
+					return SetCommand{Key: args[1].Str, Value: args[2].Str, Expiry: &expiry}, nil
+				default:
+					return nil, nil
+				}
+			} else {
+				return SetCommand{Key: args[1].Str, Value: args[2].Str, Expiry: nil}, nil
+			}
 		case "get":
-			return GetCommand{Key: args[1].BulkStr}, nil
+			return GetCommand{Key: args[1].Str}, nil
 		default:
 			return nil, nil
 		}

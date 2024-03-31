@@ -30,7 +30,7 @@ func (_ NumberRespValue) RespValueType() string {
 }
 
 type BulkStringRespValue struct {
-	BulkStr string
+	Str string
 }
 
 func (_ BulkStringRespValue) RespValueType() string {
@@ -141,7 +141,7 @@ func (respParser *RespParser) parseBulkString(reader *bytes.Reader) (RespValue, 
 	reader.ReadByte()
 
 	bulkStringRespValue := BulkStringRespValue{
-		BulkStr: string(data),
+		Str: string(data),
 	}
 
 	return bulkStringRespValue, nil

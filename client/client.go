@@ -13,7 +13,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	message := "*2\r\n$4\r\nECHO\r\n$10\r\nstrawberry\r\n"
+	message := "*2\r\n$4\r\nECHO\r\n$3\r\nstrawberry\r\n"
 	_, err = conn.Write([]byte(message))
 	if err != nil {
 		fmt.Println("Error writing:", err.Error())
