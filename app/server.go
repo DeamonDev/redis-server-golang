@@ -12,25 +12,6 @@ import (
 	"github.com/codecrafters-io/redis-starter-go/app/parser"
 )
 
-func ExpiryAnalyzer(db map[string]DbRow, mu *sync.RWMutex) {
-	for {
-		fmt.Println("<<EXPIRY_ANALYZER>>")
-
-		for k, v := range db {
-			if v.Expiry == nil {
-				continue
-			}
-
-			if time.Now().After(*v.Expiry) {
-				mu.Lock()
-				delete(db, k)
-				mu.Unlock()
-			}
-		}
-
-		time.Sleep(200 * time.Millisecond)
-	}
-}
 
 type RedisServer struct {
 	respParser    *parser.RespParser
@@ -63,7 +44,7 @@ func main() {
 
 	fmt.Println("Server is listening on port 6379")
 
-	go ExpiryAnalyzer(redisServer.db, redisServer.mu)
+	//go ExpiryAnalyzer(redisServer.db, redisServer.mu)
 
 	for {
 		conn, err := l.Accept()
