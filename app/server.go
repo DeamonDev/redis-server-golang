@@ -61,7 +61,7 @@ func main() {
 
 	fmt.Println("Server is listening on port 6379")
 
-	go ExpiryAnalyzer(redisServer.db, redisServer.mu)
+	//go ExpiryAnalyzer(redisServer.db, redisServer.mu)
 
 	for {
 		conn, err := l.Accept()
