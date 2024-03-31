@@ -3,21 +3,26 @@ package main
 import (
 	"bytes"
 	"fmt"
-	command "github.com/codecrafters-io/redis-starter-go/app/command"
-	"github.com/codecrafters-io/redis-starter-go/app/parser"
 	"net"
 	"os"
+	"sync"
+
+	command "github.com/codecrafters-io/redis-starter-go/app/command"
+	"github.com/codecrafters-io/redis-starter-go/app/parser"
 )
 
 type RedisServer struct {
 	respParser    *parser.RespParser
 	commandParser *command.RedisCommandParser
+	m             map[string]string
+	mu            sync.RWMutex
 }
 
 func NewRedisServer() *RedisServer {
 	return &RedisServer{
 		respParser:    parser.NewParser(),
 		commandParser: command.NewRedisCommandParser(),
+		m:             make(map[string]string),
 	}
 }
 
@@ -61,6 +66,27 @@ func handleClient(conn net.Conn, server *RedisServer) {
 		switch commandValue := parsedCommand.(type) {
 		case command.EchoCommand:
 			str := fmt.Sprintf("+%s\r\n", commandValue.Value)
+			conn.Write([]byte(str))
+		case command.SetCommand:
+			str := "+OK\r\n"
+			server.mu.Lock()
+			defer server.mu.Unlock()
+
+			key := commandValue.Key
+			value := commandValue.Value
+
+			server.m[key] = value
+
+			conn.Write([]byte(str))
+		case command.GetCommand:
+			server.mu.Lock()
+			defer server.mu.Unlock()
+
+			key := commandValue.Key
+			value := server.m[key]
+			length := len(value)
+
+			str := fmt.Sprintf("$%d\r\n%s\r\n", length, value)
 			conn.Write([]byte(str))
 		case command.PingCommand:
 			conn.Write([]byte("+PONG\r\n"))

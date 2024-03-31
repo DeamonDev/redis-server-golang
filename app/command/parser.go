@@ -2,6 +2,7 @@ package command
 
 import (
 	"github.com/codecrafters-io/redis-starter-go/app/parser"
+	"strings"
 )
 
 type RedisCommand interface{}
@@ -11,6 +12,15 @@ type EchoCommand struct {
 }
 
 type PingCommand struct{}
+
+type SetCommand struct {
+	Key   string
+	Value string
+}
+
+type GetCommand struct {
+	Key string
+}
 
 type RedisCommandParser struct{}
 
@@ -30,11 +40,15 @@ func (rcp *RedisCommandParser) Parse(respValue parser.RespValue) (RedisCommand, 
 			}
 		}
 
-		switch args[0].BulkStr {
+		switch strings.ToLower(args[0].BulkStr) {
 		case "echo":
 			return EchoCommand{Value: args[1].BulkStr}, nil
 		case "ping":
 			return PingCommand{}, nil
+		case "set":
+			return SetCommand{Key: args[1].BulkStr, Value: args[2].BulkStr}, nil
+		case "get":
+			return GetCommand{Key: args[1].BulkStr}, nil
 		default:
 			return nil, nil
 		}
