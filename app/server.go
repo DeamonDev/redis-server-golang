@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	command "github.com/codecrafters-io/redis-starter-go/app/command"
+	"github.com/codecrafters-io/redis-starter-go/app/command"
 	"github.com/codecrafters-io/redis-starter-go/app/resp"
 )
 
