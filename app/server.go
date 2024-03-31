@@ -22,7 +22,9 @@ func ExpiryAnalyzer(db map[string]DbRow, mu *sync.RWMutex) {
 			}
 
 			if time.Now().After(*v.Expiry) {
+				mu.Lock()
 				delete(db, k)
+				mu.Unlock()
 			}
 		}
 
@@ -61,7 +63,7 @@ func main() {
 
 	fmt.Println("Server is listening on port 6379")
 
-	//go ExpiryAnalyzer(redisServer.db, redisServer.mu)
+	go ExpiryAnalyzer(redisServer.db, redisServer.mu)
 
 	for {
 		conn, err := l.Accept()
