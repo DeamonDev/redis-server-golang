@@ -77,6 +77,8 @@ func handleClient(conn net.Conn, server *RedisServer) {
 
 			server.m[key] = value
 
+			fmt.Printf("key: %s, value: %s", key, value)
+
 			conn.Write([]byte(str))
 		case command.GetCommand:
 			server.mu.Lock()
@@ -84,8 +86,11 @@ func handleClient(conn net.Conn, server *RedisServer) {
 
 			key := commandValue.Key
 			value := server.m[key]
+			fmt.Printf("key: %s, value: %s", key, value)
+			length := len(value)
 
-			conn.Write([]byte(value))
+			str := fmt.Sprintf("$%d\r\n%s\r\n", length, value)
+			conn.Write([]byte(str))
 		case command.PingCommand:
 			conn.Write([]byte("+PONG\r\n"))
 		}
