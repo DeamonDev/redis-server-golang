@@ -27,8 +27,6 @@ func ExpiryAnalyzer(db map[string]DbRow, mu *sync.RWMutex) {
 				mu.Unlock()
 			}
 		}
-
-		time.Sleep(50 * time.Millisecond)
 	}
 }
 
