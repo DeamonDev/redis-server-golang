@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"github.com/codecrafters-io/redis-starter-go/app/resp"
 	"os"
 	"testing"
@@ -151,5 +152,26 @@ func TestGetCommand(t *testing.T) {
 
 	if getCommand != expected {
 		t.Errorf("Should be set command")
+	}
+}
+
+func TestCommandParserReturnsErrorWhenProvidedRespValueWhichIsNotAnArray(t *testing.T) {
+	respValue := resp.NumberRespValue{
+		Num: 42,
+	}
+
+	expectedError := NewCommandParserError("redis command should be represented as resp array of resp bulk strings", nil)
+
+	_, err := cp.Parse(respValue)
+
+	var actualCommandError *CommandParserError
+	ok := errors.As(err, &actualCommandError)
+	if !ok {
+		t.Errorf("expected %v to be of type CommandParserError", err)
+		return
+	}
+
+	if actualCommandError.Message != expectedError.Message {
+		t.Errorf("expected %v, actual %v", expectedError, actualCommandError)
 	}
 }
