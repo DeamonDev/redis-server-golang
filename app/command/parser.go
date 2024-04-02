@@ -1,12 +1,31 @@
 package command
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/codecrafters-io/redis-starter-go/app/resp"
 )
+
+type CommandParserError struct {
+	Domain   string
+	Message  string
+	Internal error
+}
+
+func (e *CommandParserError) Error() string {
+	return fmt.Sprintf("[%s] %s: %v", e.Domain, e.Message, e.Internal)
+}
+
+func NewCommandParserError(message string, err error) *CommandParserError {
+	return &CommandParserError{
+		Domain:   "CommandParser",
+		Message:  message,
+		Internal: err,
+	}
+}
 
 type RedisCommand interface{}
 
@@ -58,7 +77,7 @@ func (rcp *RedisCommandParser) Parse(respValue resp.RespValue) (RedisCommand, er
 
 					return SetCommand{Key: args[1].Str, Value: args[2].Str, Expiry: &expiry}, nil
 				default:
-					return nil, nil
+					return nil, NewCommandParserError("unknown set command argument", nil)
 				}
 			} else {
 				return SetCommand{Key: args[1].Str, Value: args[2].Str, Expiry: nil}, nil
@@ -66,10 +85,10 @@ func (rcp *RedisCommandParser) Parse(respValue resp.RespValue) (RedisCommand, er
 		case "get":
 			return GetCommand{Key: args[1].Str}, nil
 		default:
-			return nil, nil
+			return nil, NewCommandParserError("unknown command", nil)
 		}
 
 	default:
-		return nil, nil
+		return nil, NewCommandParserError("redis command should be represented as resp array of resp bulk strings", nil)
 	}
 }

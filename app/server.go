@@ -67,8 +67,16 @@ func handleClient(conn net.Conn, server *RedisServer) {
 
 		reader := bytes.NewReader(buff)
 
-		parsed, _ := server.respParser.Parse(reader)
-		parsedCommand, _ := server.commandParser.Parse(parsed)
+		parsed, err := server.respParser.Parse(reader)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		parsedCommand, err := server.commandParser.Parse(parsed)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
 		switch commandValue := parsedCommand.(type) {
 		case command.EchoCommand:

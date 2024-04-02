@@ -2,6 +2,7 @@ package resp
 
 import (
 	"bytes"
+	"errors"
 	"github.com/google/go-cmp/cmp"
 	"os"
 	"testing"
@@ -100,4 +101,99 @@ func TestParseArray(t *testing.T) {
 	default:
 		t.Errorf("WRONG")
 	}
+}
+
+func TestReturnsErrorWhenProvidedIncorrectString(t *testing.T) {
+	str := "INCORRECT_RESP_STRING"
+	byteSlice := []byte(str)
+
+	reader := bytes.NewReader(byteSlice)
+
+	expectedRespError := NewRespParserError("first byte is unknown", nil)
+
+	_, err := rp.Parse(reader)
+
+	var actualRespError *RespParserError
+	ok := errors.As(err, &actualRespError)
+	if !ok {
+		t.Errorf("expected %v to be of type RespParserError", err)
+		return
+	}
+
+	if actualRespError.Message != expectedRespError.Message {
+		t.Errorf("expected %v, actual %v", expectedRespError, actualRespError)
+	}
+}
+
+func TestReturnsErrorWhenProvidedStringWithoutCRTokenAtTheEnd(t *testing.T) {
+	str := "+TEXT\r"
+	byteSlice := []byte(str)
+
+	reader := bytes.NewReader(byteSlice)
+
+	expectedRespError := NewRespParserError("There has to be newline character after CR", nil)
+
+	_, err := rp.Parse(reader)
+
+	var actualRespError *RespParserError
+	ok := errors.As(err, &actualRespError)
+	if !ok {
+		t.Errorf("expected %v to be of type RespParserError", err)
+		return
+	}
+
+	if actualRespError.Message != expectedRespError.Message {
+		t.Errorf("expected %v, actual %v", expectedRespError, actualRespError)
+	}
+
+}
+
+func TestReturnsErrorWhenProvidedNumberWithoutCRTokenAtTheEnd(t *testing.T) {
+	str := ":42\r"
+	byteSlice := []byte(str)
+
+	reader := bytes.NewReader(byteSlice)
+
+	expectedRespError := NewRespParserError("There has to be newline character after CR", nil)
+
+	_, err := rp.Parse(reader)
+
+	var actualRespError *RespParserError
+	ok := errors.As(err, &actualRespError)
+	if !ok {
+		t.Errorf("expected %v to be of type RespParserError", err)
+		return
+	}
+
+	if actualRespError.Message != expectedRespError.Message {
+		t.Errorf("expected %v, actual %v", expectedRespError, actualRespError)
+	}
+
+}
+
+func TestReturnsErrorWhenProvidedIncorrectIntCRLF(t *testing.T) {
+	str := "$xx\r\nhh\r\n"
+	byteSlice := []byte(str)
+
+	reader := bytes.NewReader(byteSlice)
+
+	expectedRespError := NewRespParserError("error while reading CRLF int", errors.New("expected integer"))
+
+	_, err := rp.Parse(reader)
+
+	var actualRespError *RespParserError
+	ok := errors.As(err, &actualRespError)
+	if !ok {
+		t.Errorf("expected %v to be of type RespParserError", err)
+		return
+	}
+
+	if actualRespError.Message != expectedRespError.Message {
+		t.Errorf("expected %v, actual %v", expectedRespError, actualRespError)
+	}
+
+	if actualRespError.Internal.Error() != expectedRespError.Internal.Error() {
+		t.Errorf("expected %s, actual %s", expectedRespError.Internal.Error(), actualRespError.Internal.Error())
+	}
+
 }

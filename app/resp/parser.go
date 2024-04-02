@@ -2,12 +2,28 @@ package resp
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"strconv"
 )
+
+type RespParserError struct {
+	Domain   string
+	Message  string
+	Internal error
+}
+
+func (e RespParserError) Error() string {
+	return fmt.Sprintf("[%s] %s: %v", e.Domain, e.Message, e.Internal)
+}
+
+func NewRespParserError(message string, err error) *RespParserError {
+	return &RespParserError{
+		Domain:   "RespParser",
+		Message:  message,
+		Internal: err,
+	}
+}
 
 type RespValue interface {
 	RespValueType() string
@@ -72,27 +88,16 @@ func (respParser *RespParser) Parse(reader *bytes.Reader) (RespValue, error) {
 	case ARRAY:
 		return respParser.parseArray(reader)
 	default:
-		log.Println("First byte is unknown.")
-		return nil, errors.New("First byte is unknown.")
+		return nil, NewRespParserError("first byte is unknown", nil)
 	}
 }
 
 func (respParser *RespParser) parseString(reader *bytes.Reader) (RespValue, error) {
 	var textBuffer bytes.Buffer
 
-	for {
-		b, _ := reader.ReadByte()
-
-		if b == '\r' {
-			c, _ := reader.ReadByte()
-			if c == '\n' {
-				break
-			}
-
-			return nil, errors.New("There has to be newline character after CR")
-		}
-
-		textBuffer.WriteByte(b)
+	err := readRespLine(reader, &textBuffer)
+	if err != nil {
+		return nil, err
 	}
 
 	text := textBuffer.String()
@@ -106,19 +111,9 @@ func (respParser *RespParser) parseString(reader *bytes.Reader) (RespValue, erro
 func (respParser *RespParser) parseNumber(reader *bytes.Reader) (RespValue, error) {
 	var textBuffer bytes.Buffer
 
-	for {
-		b, _ := reader.ReadByte()
-
-		if b == '\r' {
-			c, _ := reader.ReadByte()
-			if c == '\n' {
-				break
-			}
-
-			return nil, errors.New("There has to be newline character after CR")
-		}
-
-		textBuffer.WriteByte(b)
+	err := readRespLine(reader, &textBuffer)
+	if err != nil {
+		return nil, err
 	}
 
 	text := textBuffer.String()
@@ -132,7 +127,11 @@ func (respParser *RespParser) parseNumber(reader *bytes.Reader) (RespValue, erro
 
 // happy path af
 func (respParser *RespParser) parseBulkString(reader *bytes.Reader) (RespValue, error) {
-	length, _ := readIntCRLF(reader)
+	length, err := readIntCRLF(reader)
+	if err != nil {
+		return nil, err
+	}
+
 	data := make([]byte, length)
 
 	io.ReadFull(reader, data)
@@ -167,12 +166,21 @@ func readIntCRLF(reader *bytes.Reader) (int, error) {
 	}
 
 	var length int
-	fmt.Fscanf(&textBuffer, "%d", &length)
+
+	_, err := fmt.Fscanf(&textBuffer, "%d", &length)
+	if err != nil {
+		return 0, NewRespParserError("error while reading CRLF int", err)
+	}
+
 	return length, nil
 }
 
 func (respParser *RespParser) parseArray(reader *bytes.Reader) (RespValue, error) {
-	length, _ := readIntCRLF(reader)
+	length, err := readIntCRLF(reader)
+	if err != nil {
+		return nil, err
+	}
+
 	arr := make([]RespValue, length)
 
 	for i := 0; i < length; i++ {
@@ -185,4 +193,25 @@ func (respParser *RespParser) parseArray(reader *bytes.Reader) (RespValue, error
 	}
 
 	return arrayRespValue, nil
+}
+
+func readRespLine(reader *bytes.Reader, textBuffer *bytes.Buffer) error {
+	for {
+		b, err := reader.ReadByte()
+		if err != nil {
+			return NewRespParserError("error while reading first byte", err)
+		}
+
+		if b == '\r' {
+			c, _ := reader.ReadByte()
+			if c == '\n' {
+				break
+			}
+
+			return NewRespParserError("There has to be newline character after CR", nil)
+		}
+
+		textBuffer.WriteByte(b)
+	}
+	return nil
 }
