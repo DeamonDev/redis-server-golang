@@ -90,7 +90,7 @@ func handleClient(conn net.Conn, server *RedisServer) {
 		case command.InfoCommand:
 			role := commandValue.Role
 			length := len(role)
-			str := fmt.Sprintf("$%d\r\n%s\r\n", length, role)
+			str := fmt.Sprintf("$%d\r\nrole:%s\r\n", length, role)
 
 			conn.Write([]byte(str))
 		case command.SetCommand:
