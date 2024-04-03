@@ -37,7 +37,7 @@ func NewRedisServer() *RedisServer {
 func main() {
 	redisServer := NewRedisServer()
 
-	port := flag.String("port", "6739", "port number")
+	port := flag.String("port", "6379", "port number")
 
 	flag.Parse()
 
