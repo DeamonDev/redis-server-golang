@@ -87,6 +87,12 @@ func handleClient(conn net.Conn, server *RedisServer) {
 		case command.EchoCommand:
 			str := fmt.Sprintf("+%s\r\n", commandValue.Value)
 			conn.Write([]byte(str))
+		case command.InfoCommand:
+			role := commandValue.Role
+			length := len(role)
+			str := fmt.Sprintf("$%d\r\n%s\r\n", length, role)
+
+			conn.Write([]byte(str))
 		case command.SetCommand:
 			server.mu.Lock()
 

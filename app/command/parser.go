@@ -27,6 +27,20 @@ func NewCommandParserError(message string, err error) *CommandParserError {
 	}
 }
 
+type NodeRole string
+
+const (
+	Master NodeRole = "master"
+	Slave  NodeRole = "slave"
+)
+
+type InfoCommand struct {
+	Role             NodeRole
+	ConnectedSlaves  int
+	MasterReplId     int
+	MasterReplOffset int
+}
+
 type RedisCommand interface{}
 
 type EchoCommand struct {
@@ -66,6 +80,8 @@ func (rcp *RedisCommandParser) Parse(respValue resp.RespValue) (RedisCommand, er
 		switch strings.ToLower(args[0].Str) {
 		case "echo":
 			return EchoCommand{Value: args[1].Str}, nil
+		case "info":
+			return InfoCommand{Master, 0, 0, 0}, nil
 		case "ping":
 			return PingCommand{}, nil
 		case "set":
