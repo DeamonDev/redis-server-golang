@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -36,9 +37,13 @@ func NewRedisServer() *RedisServer {
 func main() {
 	redisServer := NewRedisServer()
 
-	l, err := net.Listen("tcp", "0.0.0.0:6379")
+	port := flag.String("port", "6739", "port number")
+
+	flag.Parse()
+
+	l, err := net.Listen("tcp", "0.0.0.0"+":"+*port)
 	if err != nil {
-		fmt.Println("Failed to bind to the port 6379")
+		fmt.Printf("Failed to bind to the port %d", port)
 		os.Exit(1)
 	}
 
