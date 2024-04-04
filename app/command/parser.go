@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/codecrafters-io/redis-starter-go/app/domain"
+	NodeRoles "github.com/codecrafters-io/redis-starter-go/app/domain/noderoles"
 	"github.com/codecrafters-io/redis-starter-go/app/resp"
 )
 
@@ -27,21 +29,15 @@ func NewCommandParserError(message string, err error) *CommandParserError {
 	}
 }
 
-type NodeRole string
-
-const (
-	Master NodeRole = "master"
-	Slave  NodeRole = "slave"
-)
-
 type InfoCommand struct {
-	Role             NodeRole
+	Role             domain.NodeRole
 	ConnectedSlaves  int
 	MasterReplId     int
 	MasterReplOffset int
 }
 
-type RedisCommand interface{}
+type RedisCommand interface {
+}
 
 type EchoCommand struct {
 	Value string
@@ -81,7 +77,7 @@ func (rcp *RedisCommandParser) Parse(respValue resp.RespValue) (RedisCommand, er
 		case "echo":
 			return EchoCommand{Value: args[1].Str}, nil
 		case "info":
-			return InfoCommand{Master, 0, 0, 0}, nil
+			return InfoCommand{NodeRoles.Master, 0, 0, 0}, nil
 		case "ping":
 			return PingCommand{}, nil
 		case "set":

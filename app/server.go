@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -18,6 +19,7 @@ type RedisServer struct {
 	commandParser *command.RedisCommandParser
 	db            map[string]DbRow
 	mu            *sync.RWMutex
+	port          string
 }
 
 type DbRow struct {
@@ -25,7 +27,7 @@ type DbRow struct {
 	Expiry *time.Time
 }
 
-func NewRedisServer() *RedisServer {
+func NewRedisServer(port string) *RedisServer {
 	return &RedisServer{
 		respParser:    resp.NewParser(),
 		commandParser: command.NewRedisCommandParser(),
@@ -35,11 +37,11 @@ func NewRedisServer() *RedisServer {
 }
 
 func main() {
-	redisServer := NewRedisServer()
-
 	port := flag.String("port", "6379", "port number")
 
 	flag.Parse()
+
+	redisServer := NewRedisServer(*port)
 
 	l, err := net.Listen("tcp", "0.0.0.0"+":"+*port)
 	if err != nil {
@@ -88,9 +90,26 @@ func handleClient(conn net.Conn, server *RedisServer) {
 			str := fmt.Sprintf("+%s\r\n", commandValue.Value)
 			conn.Write([]byte(str))
 		case command.InfoCommand:
+			rolePrefix := "role"
 			role := commandValue.Role
-			length := len(role) + 5
-			str := fmt.Sprintf("$%d\r\nrole:%s\r\n", length, role)
+
+			connectedSlavesPrefix := "connected_slaves"
+			connectedSlaves := commandValue.ConnectedSlaves
+			connectedSlavesNoOfDigits := len(strconv.Itoa(connectedSlaves))
+
+			masterReplIdPrefix := "master_replid"
+			masterReplId := commandValue.MasterReplId
+			masterReplIdNoOfDigits := len(strconv.Itoa(masterReplId))
+
+			masterReplOffsetPrefix := "master_repl_offset"
+			masterReplOffset := commandValue.MasterReplOffset
+			masterReplOffsetNoOfDigits := len(strconv.Itoa(masterReplOffset))
+
+			length := len(rolePrefix) + 1 + len(role) + 1 + len(connectedSlavesPrefix) + 1 + connectedSlavesNoOfDigits + 1 + len(masterReplIdPrefix) + 1 + masterReplIdNoOfDigits +
+				1 + len(masterReplOffsetPrefix) + 1 + masterReplOffsetNoOfDigits
+
+			str := fmt.Sprintf("$%d\r\n%s:%s\n%s:%d\n%s:%d\n%s:%d\r\n", length, rolePrefix, role, connectedSlavesPrefix, connectedSlaves, masterReplIdPrefix, masterReplId,
+				masterReplOffsetPrefix, masterReplOffset)
 
 			conn.Write([]byte(str))
 		case command.SetCommand:
