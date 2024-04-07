@@ -127,7 +127,7 @@ func handleClient(conn net.Conn, server *RedisServer) {
 
 			masterReplIdPrefix := "master_replid"
 			masterReplId := commandValue.MasterReplId
-			masterReplIdNoOfDigits := len(strconv.Itoa(masterReplId))
+			masterReplIdNoOfDigits := len(masterReplId)
 
 			masterReplOffsetPrefix := "master_repl_offset"
 			masterReplOffset := commandValue.MasterReplOffset
