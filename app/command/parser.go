@@ -30,7 +30,7 @@ func NewCommandParserError(message string, err error) *CommandParserError {
 type InfoCommand struct {
 	Role             string
 	ConnectedSlaves  int
-	MasterReplId     int
+	MasterReplId     string
 	MasterReplOffset int
 }
 
@@ -77,7 +77,8 @@ func (rcp *RedisCommandParser) Parse(respValue resp.RespValue) (RedisCommand, er
 		case "echo":
 			return EchoCommand{Value: args[1].Str}, nil
 		case "info":
-			return InfoCommand{rcp.configuration.Role, 0, 0, 0}, nil
+			masterReplId := "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb"
+			return InfoCommand{rcp.configuration.Role, 0, masterReplId, 0}, nil
 		case "ping":
 			return PingCommand{}, nil
 		case "set":
