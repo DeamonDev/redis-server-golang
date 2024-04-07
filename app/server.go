@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
+	"github.com/codecrafters-io/redis-starter-go/app/domain/configuration"
 	"net"
 	"os"
 	"strconv"
@@ -15,11 +15,11 @@ import (
 )
 
 type RedisServer struct {
-	respParser    *resp.RespParser
-	commandParser *command.RedisCommandParser
-	db            map[string]DbRow
-	mu            *sync.RWMutex
-	port          string
+	respParser         *resp.RespParser
+	commandParser      *command.RedisCommandParser
+	db                 map[string]DbRow
+	mu                 *sync.RWMutex
+	redisConfiguration configuration.RedisConfiguration
 }
 
 type DbRow struct {
@@ -27,23 +27,48 @@ type DbRow struct {
 	Expiry *time.Time
 }
 
-func NewRedisServer(port string) *RedisServer {
+func NewRedisServer(configuration configuration.RedisConfiguration) *RedisServer {
 	return &RedisServer{
-		respParser:    resp.NewParser(),
-		commandParser: command.NewRedisCommandParser(),
-		db:            make(map[string]DbRow),
-		mu:            &sync.RWMutex{},
+		respParser:         resp.NewParser(),
+		commandParser:      command.NewRedisCommandParser(configuration),
+		db:                 make(map[string]DbRow),
+		mu:                 &sync.RWMutex{},
+		redisConfiguration: configuration,
 	}
 }
 
 func main() {
-	port := flag.String("port", "6379", "port number")
+	var port string
+	port = "6379"
 
-	flag.Parse()
+	var role string
+	role = "master"
 
-	redisServer := NewRedisServer(*port)
+	var replicaOf *configuration.ReplicaOf
+	replicaOf = nil
 
-	l, err := net.Listen("tcp", "0.0.0.0"+":"+*port)
+	for i, arg := range os.Args {
+		switch arg {
+		case "--port", "-p":
+			port = os.Args[i]
+		case "--replicaof":
+			role = "slave"
+			replicaOf = &configuration.ReplicaOf{
+				Host: os.Args[i+1],
+				Port: os.Args[i+2],
+			}
+		}
+	}
+
+	redisConfiguration := configuration.RedisConfiguration{
+		Port:      port,
+		Role:      role,
+		ReplicaOf: replicaOf,
+	}
+
+	redisServer := NewRedisServer(redisConfiguration)
+
+	l, err := net.Listen("tcp", "0.0.0.0"+":"+port)
 	if err != nil {
 		fmt.Printf("Failed to bind to the port %d", port)
 		os.Exit(1)

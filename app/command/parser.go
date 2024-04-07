@@ -2,13 +2,11 @@ package command
 
 import (
 	"fmt"
+	"github.com/codecrafters-io/redis-starter-go/app/domain/configuration"
+	"github.com/codecrafters-io/redis-starter-go/app/resp"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/codecrafters-io/redis-starter-go/app/domain"
-	NodeRoles "github.com/codecrafters-io/redis-starter-go/app/domain/noderoles"
-	"github.com/codecrafters-io/redis-starter-go/app/resp"
 )
 
 type CommandParserError struct {
@@ -30,7 +28,7 @@ func NewCommandParserError(message string, err error) *CommandParserError {
 }
 
 type InfoCommand struct {
-	Role             domain.NodeRole
+	Role             string
 	ConnectedSlaves  int
 	MasterReplId     int
 	MasterReplOffset int
@@ -55,10 +53,12 @@ type GetCommand struct {
 	Key string
 }
 
-type RedisCommandParser struct{}
+type RedisCommandParser struct {
+	configuration configuration.RedisConfiguration
+}
 
-func NewRedisCommandParser() *RedisCommandParser {
-	return &RedisCommandParser{}
+func NewRedisCommandParser(redisConfiguration configuration.RedisConfiguration) *RedisCommandParser {
+	return &RedisCommandParser{configuration: redisConfiguration}
 }
 
 func (rcp *RedisCommandParser) Parse(respValue resp.RespValue) (RedisCommand, error) {
@@ -77,7 +77,7 @@ func (rcp *RedisCommandParser) Parse(respValue resp.RespValue) (RedisCommand, er
 		case "echo":
 			return EchoCommand{Value: args[1].Str}, nil
 		case "info":
-			return InfoCommand{NodeRoles.Master, 0, 0, 0}, nil
+			return InfoCommand{rcp.configuration.Role, 0, 0, 0}, nil
 		case "ping":
 			return PingCommand{}, nil
 		case "set":
