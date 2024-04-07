@@ -57,7 +57,10 @@ func main() {
 				Host: os.Args[i+1],
 				Port: os.Args[i+2],
 			}
+		default:
+			continue
 		}
+
 	}
 
 	redisConfiguration := configuration.RedisConfiguration{
@@ -70,7 +73,7 @@ func main() {
 
 	l, err := net.Listen("tcp", "0.0.0.0"+":"+port)
 	if err != nil {
-		fmt.Printf("Failed to bind to the port %d", port)
+		fmt.Printf("Failed to bind to the port %s", port)
 		os.Exit(1)
 	}
 
