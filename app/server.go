@@ -50,7 +50,7 @@ func main() {
 	for i, arg := range os.Args {
 		switch arg {
 		case "--port", "-p":
-			port = os.Args[i]
+			port = os.Args[i+1]
 		case "--replicaof":
 			role = "slave"
 			replicaOf = &configuration.ReplicaOf{
@@ -77,7 +77,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Server is listening on port 6379")
+	fmt.Printf("Server is listening on port 6379 with configuration: %v", redisConfiguration)
 
 	for {
 		conn, err := l.Accept()
