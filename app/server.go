@@ -133,10 +133,20 @@ func handleClient(conn net.Conn, server *RedisServer) {
 			masterReplOffset := commandValue.MasterReplOffset
 			masterReplOffsetNoOfDigits := len(strconv.Itoa(masterReplOffset))
 
-			length := len(rolePrefix) + 1 + len(role) + 1 + len(connectedSlavesPrefix) + 1 + connectedSlavesNoOfDigits + 1 + len(masterReplIdPrefix) + 1 + masterReplIdNoOfDigits +
-				1 + len(masterReplOffsetPrefix) + 1 + masterReplOffsetNoOfDigits
+			length := len(rolePrefix) + 1 +
+				len(role) + 1 +
+				len(connectedSlavesPrefix) + 1 +
+				connectedSlavesNoOfDigits + 1 +
+				len(masterReplIdPrefix) + 1 +
+				masterReplIdNoOfDigits + 1 +
+				len(masterReplOffsetPrefix) + 1 +
+				masterReplOffsetNoOfDigits
 
-			str := fmt.Sprintf("$%d\r\n%s:%s\n%s:%d\n%s:%s\n%s:%d\r\n", length, rolePrefix, role, connectedSlavesPrefix, connectedSlaves, masterReplIdPrefix, masterReplId,
+			str := fmt.Sprintf("$%d\r\n%s:%s\n%s:%d\n%s:%s\n%s:%d\r\n",
+				length,
+				rolePrefix, role,
+				connectedSlavesPrefix, connectedSlaves,
+				masterReplIdPrefix, masterReplId,
 				masterReplOffsetPrefix, masterReplOffset)
 
 			conn.Write([]byte(str))
